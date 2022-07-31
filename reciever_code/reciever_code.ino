@@ -1,48 +1,50 @@
 
-int rec = 11;
+int rf_receiver_pin = 11;  // ASK RECEIVER PIN
 void setup() {
-  // put your setup code here, to run once:
-  pinMode(rec, INPUT);
-  Serial.begin(9600);
+	// put your setup code here, to run once:
+	pinMode(rf_receiver_pin, INPUT);
+	Serial.begin(9600);
 }
 
-bool flag = false;
+String reciever_rx(int);
 
-char reciever_rx(void);
-
-int interval_fn(void);
 void loop() {
-  int time_ = interval_fn();
-  Serial.println(time_);
-  char cmd_rtn = recieve_rx(time_);
+
+	//  String cmd_rtn = recieve_rx(time_);
+	//    Serial.println(cmd_rtn);
+	int pulseIN_rx = pulseIn(rf_receiver_pin,HIGH);
+//	String cmd = recieve_rx(rf_receiver_pin);
+//	Serial.println(cmd);
+	Serial.println(pulseIN_rx);
+	delay(300);
 }
+String recieve_rx(int rec_pin) {
+	int off_sg_xf = 11000;	// OFF command pulseIN pulseIN_rx Mid value
+	int on_sg_xf = 1000; /// ON command pulseIN pulseIN_rx Mid value
+	const int tolerance = 2000;
 
+	// set upper and lower threshold
+	const int off_sg_up = off_sg_xf + tolerance; 
+	const  int off_sg_lw = off_sg_xf - tolerance; 
+	const  int on_sg_up = on_sg_xf + tolerance; 
+	const  int on_sg_lw = on_sg_xf - tolerance;  
 
-char recieve_rx(int interval_arg) {
-  if ( interval_arg > 1500 && interval_arg < 2500) {
-    //		Serial.println("on");/
-    return 'n';
-  }
-  else if ( interval_arg > 2600 && interval_arg < 3200) {
-    //		Serial.println("off");
-    return 'f';
-  }
-  else if (interval_arg > 3300 && interval_arg < 5000) {
-    //  Serial.println("end");/
-    return 'e';
-  }
-}
+	const int noise_threshold = 800;   /// threshold value when no signal is transmitted
 
-int interval_fn() {
-  unsigned long int lasttime;
-  unsigned long int interval;
-  unsigned long int rec_time = pulseIn(rec, HIGH);
-  if (rec_time > 300) {
-    //    Serial.println(interval);/
-    lasttime = millis();
-  }
-  else {
-    interval = millis() - lasttime;
-    return interval;
-  }
+	int pulseIN_low = pulseIn(rec_pin,LOW);
+	int pulseIN_rx = pulseIn(rec_pin,HIGH);
+	if (pulseIN_rx > noise_threshold){
+		if (on_sg_up > pulseIN_rx > on_sg_lw) {
+			//		Serial.println("on");/
+			return "LED ON";
+		}
+		else if (off_sg_up > pulseIN_rx > off_sg_lw) {
+			//		Serial.println("off");
+			return "LED OFF";
+		}
+	}
+	else
+	{
+		// not receiving any signal from tx
+	}
 }
